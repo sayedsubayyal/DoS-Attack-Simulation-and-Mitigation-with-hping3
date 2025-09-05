@@ -1,55 +1,77 @@
+# DoS Attack Simulation and Mitigation with hping3
 
-Simulating a DoS Attack in a Controlled Environment
+A controlled lab exercise demonstrating a SYN flood attack using **hping3** against a local web server, and mitigation using **iptables** firewall rules.
 
-In this lab, I simulated a Denial of Service (DoS) attack using hping3 against a locally hosted web server and then applied firewall rules to mitigate the attack. This exercise was performed entirely in a controlled environment to ensure safety and legality.
+---
 
-Tools Used
+##  Objective
 
-Kali Linux – testing environment
+To simulate a Denial of Service (DoS) attack in a safe, legal environment and demonstrate how firewall rules can effectively block malicious traffic.
 
-Python3 HTTP Server – local server (target)
+---
 
-hping3 – packet crafting & DoS testing tool
+##  Tools Used
 
-iptables – Linux firewall for traffic filtering
+- **Kali Linux** — Penetration testing platform  
+- **Python3 HTTP Server** — Local test server  
+- **hping3** — Packet crafting and DoS testing tool  
+- **iptables** — Linux firewall for traffic filtering  
 
-Steps Performed
+---
 
-Setup Local Web Server
+##  Setup & Execution
 
+### 1. Start Local Web Server
+
+```bash
 mkdir ~/testserver
 cd ~/testserver
 echo "Hello SB! This is my test server." > index.html
 python3 -m http.server 8080
 curl http://127.0.0.1:8080
 
+2. Simulate SYN Flood with hping3
+bash
+Copy code
+sudo hping3 --flood -S -p 8080 127.0.0.1
+Floods the server with SYN packets
 
-Simulated SYN Flood with hping3
+Demonstrates service delay or unresponsiveness
+
+3. Apply Firewall Mitigation
+sudo iptables -A INPUT -p tcp --dport 8080 --syn -j DROP
+
+
+Relaunch the flood:
 
 sudo hping3 --flood -S -p 8080 127.0.0.1
 
 
-Sent millions of SYN packets to port 8080.
+Firewall drops SYN packets
 
-The server slowed down due to resource exhaustion.
+Server remains responsive
 
-Applied Firewall Mitigation
+Results & Observations
+Scenario	Server Response
+Without firewall protection	Overloaded or unresponsive
+With firewall rule	Protected, responsive
+Key Learnings
 
-sudo iptables -A INPUT -p tcp --dport 8080 --syn -j DROP
+DoS attacks exploit vulnerabilities in the TCP handshake
+
+hping3 is effective for testing resilience of firewalls and IDS
+
+iptables can mitigate basic saturation attacks
+
+Always use controlled labs — never attack production systems
+
+License
+
+This project is for educational purposes and is provided under the MIT License
+.
 
 
-Dropped incoming SYN packets.
+---
 
-Relaunched the flood → server impact was greatly reduced.
-
-Key Takeaways
-
-DoS floods exploit the TCP handshake and can exhaust server resources.
-
-hping3 is a powerful tool for testing firewall and IDS resilience.
-
-Firewalls and filtering rules are crucial in mitigating basic DoS attacks.
-
-All testing must always be done in controlled lab setups to remain safe and ethical.
-
-✅ This exercise demonstrated both the attack simulation and the defense mechanism, providing a practical understanding of DoS resilience testing.
+You can tailor or shorten any section as you like. Let me know if you’d like help drafting the actual LinkedIn post next!
+::contentReference[oaicite:0]{index=0}
