@@ -1,98 +1,141 @@
-DoS Attack Simulation and Mitigation Using hping3
+# DoS Attack Simulation and Mitigation Using hping3
 
-Author: Syed Muhammad Subayyal (SB)
+## Overview
+This repository documents a controlled laboratory experiment simulating Denial-of-Service (DoS) attacks using the packet crafting tool hping3.  
+The objective is to understand how common DoS vectors impact a Linux-based web server and how layered defensive techniques can mitigate these attacks.
 
+All testing was performed in an isolated, authorized virtual lab environment.
 
-Abstract
+---
 
-Denial-of-Service (DoS) attacks remain a critical threat to network availability.
-This research presents the design, execution, and defense of a controlled DoS attack using the open-source packet generator hping3.
-A laboratory environment was created to simulate SYN- and ICMP-flood scenarios, measure their impact on a Linux web server, and evaluate mitigation techniques such as firewall filtering, SYN cookies, and rate limiting.
-The results highlight the importance of layered defenses and continuous monitoring.
+## Learning Objectives
+- Understand the mechanics of common DoS attacks
+- Simulate SYN flood and ICMP flood attacks safely
+- Observe system and network impact under attack
+- Apply and evaluate mitigation techniques
+- Understand the importance of layered defenses
 
-1 Introduction
+---
 
-A DoS attack attempts to render a service inaccessible by overwhelming network resources or exploiting protocol weaknesses.
-Understanding how these attacks work is essential for security engineers and administrators.
-This study demonstrates a hands-on methodology for simulating common DoS vectors in a controlled lab, followed by systematic mitigation.
+## Lab Environment
+- Target Server:
+  - Ubuntu 22.04
+  - Apache HTTP Server
+- Attack Host:
+  - Kali Linux
+  - hping3
+- Monitoring Tools:
+  - htop
+  - iftop
+  - Wireshark
+  - netstat
+- Network Scope:
+  - Isolated private virtual network (authorized testing only)
 
-2 Background and Related Work
+---
 
-Previous studies emphasize both the variety of DoS techniques—TCP SYN floods, ICMP floods, UDP floods—and the need for multi-layered defenses.
-Tools such as hping3 allow researchers to craft packets with fine-grained control, making it ideal for realistic simulation.
+## Background
+A Denial-of-Service attack aims to make a service unavailable by exhausting system or network resources.  
+Common techniques include TCP SYN floods and ICMP floods, which exploit protocol behavior rather than software vulnerabilities.
 
-3 Methodology
-3.1 Environment
+Understanding these attacks is essential for network administrators and security engineers responsible for availability and resilience.
 
-Target Server: Ubuntu 22.04 VM running Apache HTTP.
+---
 
-Attack Host: Kali Linux VM with hping3 installed.
+## Attack Methodology
 
-Monitoring Tools: htop, iftop, Wireshark, and netstat.
-Both hosts were isolated in a private virtual network to ensure legality and safety.
+### SYN Flood Simulation
+sudo hping3 --flood -S -p 80 <TARGET_IP>
 
-3.2 Attack Scenarios
+yaml
+Copy code
 
-SYN Flood
+Behavior:
+- Sends TCP packets with the SYN flag at maximum rate
+- Exhausts the server’s connection handling capacity
 
-sudo hping3 --flood -S -p 80 <target_ip>
+---
 
+### ICMP Flood Simulation
+sudo hping3 --flood -1 <TARGET_IP>
 
-Sends TCP packets with the SYN flag set at maximum rate.
+yaml
+Copy code
 
-ICMP Flood
+Behavior:
+- Generates high-rate ICMP echo requests
+- Consumes CPU and network bandwidth
 
-sudo hping3 --flood -1 <target_ip>
+---
 
+## Data Collection
+During each attack scenario, the following metrics were monitored:
+- CPU utilization
+- Memory usage
+- Network throughput
+- Packet loss
+- HTTP service response time
 
-Generates rapid ICMP echo requests.
+---
 
-3.3 Data Collection
+## Mitigation Techniques
 
-CPU usage, memory consumption, packet loss, and service response times were logged throughout each attack.
+Mitigations were applied incrementally to evaluate effectiveness:
 
-4 Mitigation Techniques
+### Firewall Filtering
+- iptables rules to drop abnormal SYN rates
+- Blocking spoofed or invalid traffic patterns
 
-Mitigation was applied incrementally:
+### Rate Limiting
+- Connection limits per IP per second
+- ICMP request rate restrictions
 
-Firewall Rules (iptables): Drop abnormal SYN rates and spoofed IP ranges.
+### SYN Cookies
+sysctl -w net.ipv4.tcp_syncookies=1
 
-Rate Limiting: Limit connections per IP per second.
+yaml
+Copy code
+- Kernel-level protection against SYN queue exhaustion
 
-SYN Cookies: Enable kernel-level protection (sysctl -w net.ipv4.tcp_syncookies=1).
+### Intrusion Detection
+- Suricata for anomaly detection and alerting
 
-IDS/IPS: Suricata for traffic anomaly detection.
+---
 
-5 Results
+## Results
+- SYN flood attacks caused CPU utilization to exceed 90% and led to HTTP timeouts.
+- Enabling SYN cookies and firewall rate limits reduced attack impact by approximately 70%.
+- ICMP floods were effectively mitigated through rate limiting.
+- Layered defenses significantly improved service availability.
 
-During the SYN flood, CPU utilization on the target rose above 90 % and HTTP responses timed out within seconds.
+---
 
-Enabling SYN cookies and firewall rate limits reduced the effective attack bandwidth by ~70 %.
+## Discussion
+Key observations:
+- Even a single attacking host can disrupt services without defenses.
+- Layered mitigation is substantially more effective than individual controls.
+- Overly strict rate limits can affect legitimate users, requiring careful tuning.
 
-ICMP floods were largely mitigated through simple rate limiting.
+---
 
-Graphs of CPU load vs. time and packet rate vs. dropped packets (Fig. 1, Fig. 2) illustrate the improvement after each defense layer.
+## Conclusion
+This lab demonstrates how DoS attacks operate at the network level and why availability-focused defenses are critical.  
+Simulating attacks in a safe environment provides valuable insight into both offensive techniques and defensive architecture.
 
-6 Discussion
+Future work may include:
+- Distributed DoS (DDoS) simulations
+- Anomaly detection using machine learning
+- Evaluation of cloud-based mitigation services
 
-The experiment confirmed that:
+---
 
-A single host can degrade service rapidly if no countermeasures exist.
+## Disclaimer
+This project was conducted strictly for educational purposes in an isolated and authorized lab environment.  
+No production or unauthorized systems were targeted.
 
-Layered defenses—filtering, kernel hardening, and detection—are significantly more effective than any single measure.
+---
 
-Overly aggressive rate limits may block legitimate users, highlighting the need for careful tuning.
-
-7 Conclusion and Future Work
-
-Simulating DoS attacks with hping3 provides practical insight into both offensive and defensive network security.
-Future research can expand to distributed attacks (DDoS), apply machine-learning anomaly detection, and test cloud-based mitigation services.
-
-References
-
-RFC 4987: TCP SYN Flooding Attacks and Common Mitigations.
-
-hping3 documentation – https://github.com/antirez/hping
-.
-
-CERT Coordination Center, “Denial of Service Attacks,” 2024.
+## References
+- RFC 4987: TCP SYN Flooding Attacks and Common Mitigations
+- hping3 Documentation
+- CERT Coordination Center: Denial of Service Attacks
